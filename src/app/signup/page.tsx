@@ -2,9 +2,11 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,7 +34,7 @@ export default function SignupPage() {
     try {
       const supabase = createClient();
 
-      const { error: signupError } = await supabase.auth.signUp({
+      const { data, error: signupError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -42,6 +44,12 @@ export default function SignupPage() {
       });
 
       if (signupError) throw signupError;
+
+      if (data.session) {
+        router.replace("/");
+        router.refresh();
+        return;
+      }
 
       setSuccess(true);
     } catch (err) {
@@ -77,11 +85,10 @@ export default function SignupPage() {
                 ✓
               </div>
               <h1 className="text-2xl font-semibold text-[#242321]">
-                Check your inbox.
+                Account created.
               </h1>
               <p className="mt-3 text-sm leading-6 text-[#77736d]">
-                We sent a confirmation link to <strong>{email}</strong>.
-                Open that email and confirm your account to continue.
+                Your account was created, but email confirmation is still enabled in Supabase. Turn off Confirm Email there to allow direct signup.
               </p>
             </div>
           ) : (
@@ -178,7 +185,7 @@ export default function SignupPage() {
               </form>
 
               <p className="mt-6 text-center text-xs leading-5 text-[#89857e]">
-                A confirmation email will be required before you can sign in.
+                Create your account with your email and password.
               </p>
             </>
           )}
